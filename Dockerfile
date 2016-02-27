@@ -1,8 +1,9 @@
 #
 # OsmPostgres
+# Image containing PostgreSQL server and a database prepared to be used for OSM data.
 #
 
-FROM osm_base:latest
+FROM mytracks/osmbase:latest
 MAINTAINER "Dirk Stichling" <mytracks@mytracks4mac.com>
 
 # Install postgres
