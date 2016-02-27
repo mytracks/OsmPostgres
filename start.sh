@@ -8,7 +8,7 @@ sleep 20
 if [ ! -f /etc/osm_import_complete ]; then
   cd ~/osm2pgsql
   curl -O http://download.geofabrik.de/europe/germany/hamburg-latest.osm.pbf
-  /usr/local/bin/osm2pgsql -m --slim --flat-nodes flat.nodes --drop --cache 10000 --number-processes 4 -d gis *.osm.* -U gis
+  /usr/local/bin/osm2pgsql -m --slim --flat-nodes flat.nodes --drop --cache 6000 --number-processes 4 -d gis *.osm.* -U gis
   rm flat.nodes
   touch /etc/osm_import_complete
 fi
