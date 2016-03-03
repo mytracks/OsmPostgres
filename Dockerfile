@@ -9,7 +9,14 @@ MAINTAINER "Dirk Stichling" <mytracks@mytracks4mac.com>
 # Install postgres
 RUN rpm -ivh http://yum.postgresql.org/9.5/redhat/rhel-7-x86_64/pgdg-centos95-9.5-2.noarch.rpm \
 && yum -y install epel-release \
-&& yum -y install postgresql95 postgresql95-server postgresql95-libs postgresql95-contrib postgresql95-devel postgis2_95
+&& yum -y install postgresql95-server postgis2_95
+
+COPY osm2pgsql-1.0.0-1.el7.centos.x86_64.rpm /tmp/
+
+RUN yum -y install boost proj-epsg
+
+RUN rpm -Uvh /tmp/osm2pgsql-1.0.0-1.el7.centos.x86_64.rpm \
+&& rm /tmp/*.rpm
 
 # Create Postgres data directory
 RUN mkdir /home/pgdata; chown postgres.postgres /home/pgdata
@@ -22,8 +29,10 @@ USER postgres
 
 RUN /usr/pgsql-9.5/bin/pg_ctl -D /home/pgdata/osm initdb
 
-RUN echo host gis gis 127.0.0.1/32 trust >> /home/pgdata/osm/pg_hba.conf \
+RUN echo host gis gis 0.0.0.0/0 trust >> /home/pgdata/osm/pg_hba.conf \
 && echo local all all trust >> /home/pgdata/osm/pg_hba.conf \
+&& sed -i.bak "s/#\?listen_addresses \?=.*/listen_addresses = '*'/g" /home/pgdata/osm/postgresql.conf \
+&& sed -i.bak "s/#\?port \?=.*/port = 5432/g" /home/pgdata/osm/postgresql.conf \
 && sed -i.bak 's/#\?silent_mode \?=.*/silent_mode = on/g' /home/pgdata/osm/postgresql.conf \
 && sed -i.bak 's/#\?shared_buffers \?=.*/shared_buffers = 512kB/g' /home/pgdata/osm/postgresql.conf \
 && sed -i.bak 's/#\?work_mem \?=.*/work_mem = 1GB/g' /home/pgdata/osm/postgresql.conf \
@@ -51,31 +60,6 @@ RUN /usr/pgsql-9.5/bin/pg_ctl -D /home/pgdata/osm start \
 
 USER root
 
-RUN yum -y install cmake expat-devel geos-devel proj-devel proj-epsg
-
-# Libosmium
-RUN cd ~ \
-&& mkdir tmp \
-&& cd tmp \
-&& git clone https://github.com/osmcode/libosmium.git \
-&& cd libosmium \
-&& mkdir build \
-&& cd build \
-&& cmake .. \
-&& make \
-&& make install \
-&& cd ~; rm -rf tmp
-
-# osm2pgsql
-RUN cd ~ \
-&& git clone https://github.com/openstreetmap/osm2pgsql.git \
-&& cd osm2pgsql \
-&& mkdir build \
-&& cd build \
-&& cmake .. \
-&& make \
-&& make install
-
 # Clean up
 RUN yum clean all
 
@@ -84,8 +68,6 @@ EXPOSE 5432
 
 # Add VOLUMEs to allow backup of config, logs and databases
 VOLUME  ["/etc/postgresql", "/var/log/postgresql", "/home/pgdata"]
-
-USER root
 
 COPY start.sh /etc/
 

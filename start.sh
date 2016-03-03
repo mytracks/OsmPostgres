@@ -7,10 +7,11 @@ sleep 20
 
 if [ ! -f /etc/osm_import_complete ]; then
   cd ~/osm2pgsql
-  curl -O http://download.geofabrik.de/europe/germany/hamburg-latest.osm.pbf
-  /usr/local/bin/osm2pgsql -m --slim --flat-nodes flat.nodes --drop --cache 6000 --number-processes 4 -d gis *.osm.* -U gis
-  rm flat.nodes
+  curl -O http://planet.osm.org/planet/planet-latest.osm.bz2
+  /usr/local/bin/osm2pgsql -m --slim --flat-nodes flat.nodes --drop --cache 6000 --number-processes 4 -d gis planet-latest.osm.bz2 -U gis
   touch /etc/osm_import_complete
+  rm flat.nodes
+  rm planet-latest.osm.bz2
 fi
 
 sleep infinity
